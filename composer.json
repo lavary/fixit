@@ -8,7 +8,7 @@
         "issue collector",
         "Technical debt locator",
         "To-do finder",
-        "To-do locator",
+        "To-do locator"
     ],
     "homepage": "https://github.com/lavary/fixit",
     "license": "MIT",
