@@ -1,0 +1,46 @@
+{
+    "name": "lavary/fixit",
+    "description": "Track your Fixme comments real quick with just a command! ",
+    "type": "library",
+    "keywords": [
+        "fixme finder",
+        "fixme collector",
+        "issue collector",
+        "Technical debt locator",
+        "To-do finder",
+        "To-do locator",
+    ],
+    "homepage": "https://github.com/lavary/fixit",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Reza M. Lavaryan",
+            "email": "mrl.8081@gmail.com"
+         }
+    ],
+    "support": {
+        "email": "mrl.8081@gmail.com",
+        "issues": "http://github.com/lavary/fixit/issues"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^4.8 || ^5.0"
+    },
+    "require": {
+        "symfony/console": "^3.1",
+        "symfony/finder": "^3.1",
+        "gitonomy/gitlib": "^1.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "": "src/"
+        },
+        "files": [
+            "src/Helpers.php"
+        ]
+    },
+    "bin": [
+        "fixit"
+    ],
+    "minimum-stability": "dev",
+    "prefer-stable": true
+}
