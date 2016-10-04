@@ -1,6 +1,6 @@
 # Fixit configuration
 
-keyword: ['fixme', 'todo', 'to-do', 'fix-me', 'warning']
+keyword: ['fixme', 'todo', 'to-do', 'fix-me']
 pattern: '\/\/\s*@?(%keyword%):?\s+(.+)'
 titles:  ['Line', 'Type', 'Comment']
 
@@ -9,4 +9,4 @@ exclude: ~
 include_file: ~
 exclude_file: ~
 
-output_type: list
+output_type: table
