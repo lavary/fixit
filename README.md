@@ -164,7 +164,7 @@ pattern: '\/\/\s*@?(%keyword%):?\s+(.+)'
 titles:  ['Line', 'Type', 'Comment']
 
 include: ~
-exclude: ~
+exclude: ['vendor']
 include_file: ~
 exclude_file: ~
 
