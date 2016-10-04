@@ -28,7 +28,7 @@ fixit --help
 
 Fixit tracks and collects all the comments in specified files certain keywords set in the configuration file or as command options.
 
-Comments can be in the following form across the code base.
+Comments can be in the following form across the code base. However, it can be configured in the configuration file.
 
 ```php
  // KEYWORD some description about it
