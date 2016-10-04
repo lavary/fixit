@@ -1,6 +1,8 @@
 
 #Fixit
 
+![Version](http://img.shields.io/packagist/v/lavary/fixit.svg?style=flat-square)
+
 Track your "Fixme" comments real quick with just a command!
 
 ## Installation
