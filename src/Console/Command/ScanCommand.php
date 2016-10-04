@@ -1,6 +1,6 @@
 <?php
 
-namespace Console\Command;
+namespace Fixit\Console\Command;
 
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -9,26 +9,29 @@ use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Finder\Finder;
 use Symfony\Component\Console\Helper\Table;
 use Symfony\Component\Console\Style\SymfonyStyle;
-
 use Gitonomy\Git\Repository;
 
 class ScanCommand extends Command
 {
+    use \Fixit\Config\Configurer;
+
     /**
      * Configures the current command
      *
      */
     protected function configure()
-    {
+    {       
        $this->setName('scan')
             ->setDescription('Scan the code base to find the previously marked issues.')
             ->setDefinition([
-               
-               new InputArgument('src',    InputArgument::REQUIRED, 'The source directory to start scanning'), 
-               
-               new InputOption('ext',      null, InputOption::VALUE_REQUIRED,                               'Type of files to parse'), 
-               new InputOption('level',    null, InputOption::VALUE_IS_ARRAY | InputOption::VALUE_REQUIRED, 'Level of the issue'), 
-               new InputOption('as',       null, InputOption::VALUE_REQUIRED                              , 'Render the output in a tabular format', 'table'),   
+
+               new InputOption('configuration', null, InputOption::VALUE_REQUIRED,                               'Configuration file'),
+               new InputOption('keyword',       null, InputOption::VALUE_IS_ARRAY | InputOption::VALUE_REQUIRED, 'Keywords to look for'),
+               new InputOption('include',   null, InputOption::VALUE_IS_ARRAY | InputOption::VALUE_REQUIRED, 'Directories to include'), 
+               new InputOption('exclude',   null, InputOption::VALUE_IS_ARRAY | InputOption::VALUE_REQUIRED, 'Directories to exclude'), 
+               new InputOption('include_file',  null, InputOption::VALUE_IS_ARRAY | InputOption::VALUE_REQUIRED, 'Files to include'), 
+               new InputOption('exclude_file',  null, InputOption::VALUE_IS_ARRAY | InputOption::VALUE_REQUIRED, 'Files to exclude'), 
+               new InputOption('output_type',   null, InputOption::VALUE_REQUIRED                              , 'Render the output in a tabular format'),   
             ])
             ->setHelp('Scan the code base to find the previously marked issues.');
     } 
@@ -45,21 +48,32 @@ class ScanCommand extends Command
     {              
         $this->arguments = $input->getArguments();
         $this->options   = $input->getOptions();
+        
         $this->styler    = new SymfonyStyle($input, $output);
         $this->output    = $output;
 
-        $files      = $this->collect($this->arguments['src'], $this->options['ext']);
-        $ic         = 0;      
-        $fc         = 0;
+        $this->loadConfig($this->options['configuration']);
+        $this->options = array_merge($this->config->all(), array_filter($this->options));
+        
+        $files = $this->collect(
+                    $this->options['include'],
+                    $this->options['exclude'],
+                    $this->options['include_file'],
+                    $this->options['exclude_file']
+                 );
+      
+        $ic = 0;      
         $collection = [];
         
         foreach ($files as $file) {                        
             
             $grepOutput  = [];
             $path        = $file->getRealPath();
-            $fc++;
            
-            exec('grep -onE "//[[:space:]]*@' . $this->level() . '[[:space:]]+.*$" ' . $path, $grepOutput);
+            //var_dump('grep -oniE "' . $this->pattern() . '" ' . $path);
+            //exit();
+
+            exec('grep -oniE "' . $this->pattern() . '" ' . $path, $grepOutput);
             
             // Rendering the output
             if (count($grepOutput)) {                               
@@ -69,25 +83,14 @@ class ScanCommand extends Command
         } 
 
         if ($ic) {
-            $this->styler->newLine();
-            $this->styler->text($fc . ' file(s) scanned.');
-            $this->styler->text($ic . ' issue(s) were found in ' . count($collection) . ' file(s).');
-            $this->styler->newLine();
-            
             $this->renderOutput($collection);
+            $this->styler->newLine();
+        }
 
-        } 
+        $this->styler->text($files->count() . ' file(s) scanned.');
+        $this->styler->text($ic . ' issue(s) were found in ' . count($collection) . ' file(s).');
+        $this->styler->newLine();
     }  
-
-    /**
-     * Return the appropriate issue level
-     *
-     * @return string
-     */
-    protected function level()
-    {
-        return count($this->options['level']) ? '(' . implode('|', $this->options['level']) . ')' : '[[:alpha:]]+';
-    }
 
     /**
      * Render the output according to the command option --as
@@ -95,16 +98,16 @@ class ScanCommand extends Command
      * @param array $collection
      *
      */
-    public function renderOutput($collection)
+    protected function renderOutput($collection)
     {
-        if ($this->options['as'] == 'table') {
+        if ($this->options['output_type'] == 'table') {
 
             foreach ($collection as $filename => $batch) {
                 $this->styler->text('- File:' . $filename);
                 $this->asTable($batch);
             }
         
-        } else if ($this->options['as'] == 'list') {
+        } else if ($this->options['output_type'] == 'list') {
             
             foreach ($collection as $filename => $batch) {
                 $this->styler->text('- File:' . $filename );
@@ -125,7 +128,7 @@ class ScanCommand extends Command
     protected function asTable($output)
     {         
         $table = new Table($this->output);
-        $table->setHeaders(['#', 'Line', 'Type', 'Comment']);
+        $table->setHeaders($this->titles());
         $table->setRows($this->populateRows($output));
         $table->setStyle('compact');
         
@@ -179,19 +182,16 @@ class ScanCommand extends Command
     {  
         $entries = [];
         $row     = 0;
-
+        $titles  = $this->titles();
+        
         foreach ($output as $key => $entry) {         
             
             $components = $this->parseRow($entry);                                                    
-            $entries[$key] = [
-                
-                'row'     => ++$row,
-                'line'    => $components[1],
-                'type'    => $components[2],
-                'comment' => $components[3],
-
-            ];
-
+            
+            foreach ($titles as $titleKey => $titleValue) {
+                $entries[$key][$titleValue] = isset($components[$titleKey]) ? $components[$titleKey] : '-';
+            }
+            
             if ($mergeColumns === true) {
                 $entries[$key] = implode(' ', $entries[$key]);
             }            
@@ -209,33 +209,71 @@ class ScanCommand extends Command
      */
     protected function parseRow($row)
     {  
-        $sections = [];
-        preg_match('|(\d+)://\s*@(\w+)\s+(.+)|', $row, $sections);
+        preg_match('/(\d+):' . $this->pattern() . '/i', $row, $sections);
+        
+        if (is_array($sections)) {
+            array_shift($sections);  
+        }
 
-        return $sections;    
+        return $sections;  
     }
 
     /**
-     * Collect all task files
+     * Return coulms titles for the output
      *
-     * @param  string $source
+     *
+     * @return array
+     */
+    protected function titles()
+    {  
+        return $this->options['titles'];
+    }
+
+     /**
+     * Get pattern for the comment
+     *
+     *
+     * @return strin
+     */
+    protected function pattern()
+    {  
+        return str_replace('%keyword%', implode('|', $this->options['keyword']), $this->options['pattern']);
+    }   
+
+    /**
+     * Collect files to parse
+     *
+     * @param  string|array $include_dir
+     * @param  string|array $exclude_dir
+     * @param  string|array $include_file
+     * @param  string|array $exclude_file
      *
      * @return Iterator
      */
-    protected function collect($src, $ext = null)
-    {    
-        if(!file_exists($src)) {
+    protected function collect($include_dir, $exclude_dir, $include_file, $exclude_file)
+    {            
+        if (is_null($include_dir)) {
             return [];
         }
-        
+
         $finder   = new Finder();
         $iterator = $finder->files();
-                         
-        if (!is_null($ext)) {
-            $iterator->name('*.' . ltrim($ext, '.'));
+                                
+        $iterator->files()
+                 ->ignoreVCS(true)
+                 ->ignoreDotFiles(true)
+                 ->in($include_dir)
+                 ->exclude($exclude_dir);
+        
+        // Files to include
+        foreach ((array) $include_file as $file) {
+            $iterator->name($file);
         }
 
-        $iterator->in($src);
+        // Files to exclude
+        foreach ((array) $exclude_file as $file) {
+            $iterator->notName($file);  
+        }
 
         return $iterator;
     }

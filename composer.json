@@ -28,11 +28,12 @@
     "require": {
         "symfony/console": "^3.1",
         "symfony/finder": "^3.1",
-        "gitonomy/gitlib": "^1.0"
+        "gitonomy/gitlib": "^1.0",
+        "symfony/config": "^3.1"
     },
     "autoload": {
         "psr-4": {
-            "": "src/"
+            "Fixit\\": "src/"
         },
         "files": [
             "src/Helpers.php"

@@ -1,0 +1,12 @@
+# Fixit configuration
+
+keyword: ['fixme', 'todo', 'to-do', 'fix-me', 'warning']
+pattern: '\/\/\s*@?(%keyword%):?\s+(.+)'
+titles:  ['Line', 'Type', 'Comment']
+
+include: ~
+exclude: ~
+include_file: ~
+exclude_file: ~
+
+output_type: list

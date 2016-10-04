@@ -1,6 +1,6 @@
 <?php
 
-namespace Console;
+namespace Fixit\Console;
 
 use Symfony\Component\Console\Application as SymfonyApplication;
 
@@ -13,7 +13,8 @@ class CommandKernel extends SymfonyApplication
      */
     protected $commands = [
         
-       \Console\Command\ScanCommand::class,        
+       \Fixit\Console\Command\ScanCommand::class, 
+       \Fixit\Console\Command\ConfigGeneratorCommand::class,        
     ];
 
     /**

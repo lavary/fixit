@@ -40,5 +40,5 @@ if (!defined('AUTOLOAD_PHP_FILE')) {
 
 require AUTOLOAD_PHP_FILE;
 
-$kernel = (new Console\CommandKernel('iCollector Command Line Interface', 'v0.1.0'))
+$kernel = (new Fixit\Console\CommandKernel('Fixit Command Line Interface', 'v0.1.0'))
         ->handle();
