@@ -26,7 +26,7 @@ fixit --help
 
 ## Usage
 
-Fixit tracks and collects all the comments in specified files certain keywords set in the configuration file or as command options.
+Fixit tracks and collects all the comments in specified files marked with certain keywords set in the configuration file or as command options.
 
 Comments can be in the following form across the code base. However, it can be configured in the configuration file.
 
@@ -128,7 +128,7 @@ vendor/bin/fixit scan --include /Path/to/your/codebase --output_type list
 
 It is possible to limit the collection to a limited number of directories or files (inside those directories). 
 
-To do this, you can use `--include`, `--exclude`, `include_file`, and `--exclude_file` command options. 
+To do this, you can use `--include`, `--exclude`, `--include_file`, and `--exclude_file` command options. 
 
 ```bash
 fixit scan --include path/to/code  --exclude Controller --exclude Model
